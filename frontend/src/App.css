@@ -43,7 +43,7 @@ body {
 
 .container {
   width: 90%;
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 30px auto;
   background: white;
   border-radius: 10px;
@@ -71,6 +71,7 @@ h1 {
 .log-table table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 14px;
 }
 
 .log-table th {
@@ -83,4 +84,44 @@ h1 {
 .log-table td {
   border-bottom: 1px solid #ddd;
   padding: 8px;
+}
+
+.log-row:hover {
+  background: #f5f7fa;
+}
+
+.arrow {
+  width: 25px;
+  text-align: center;
+  font-weight: bold;
+  color: #2d6cdf;
+}
+
+.expanded-row {
+  background: #f9fbff;
+}
+
+.log-message {
+  padding: 12px;
+  border-left: 3px solid #2d6cdf;
+  background: #f0f4ff;
+  border-radius: 4px;
+  font-family: monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.error {
+  color: #e53935;
+  font-weight: 600;
+}
+
+.warn {
+  color: #ff9800;
+  font-weight: 600;
+}
+
+.info {
+  color: #4caf50;
+  font-weight: 600;
 }

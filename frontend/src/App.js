@@ -5,6 +5,7 @@ import "./App.css";
 export default function App() {
   const [logs, setLogs] = useState([]);
   const [countByLevel, setCountByLevel] = useState({});
+  const [expandedRows, setExpandedRows] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -16,11 +17,19 @@ export default function App() {
         getLogs(),
         getCountByLevel(),
       ]);
-      setLogs(logsRes.data);
+      setLogs(logsRes.data.reverse()); // latest first
       setCountByLevel(countRes.data);
     } catch (err) {
       console.error("API Error:", err);
     }
+  };
+
+  const toggleExpand = (logId) => {
+    setExpandedRows((prev) =>
+      prev.includes(logId)
+        ? prev.filter((id) => id !== logId)
+        : [...prev, logId]
+    );
   };
 
   return (
@@ -43,22 +52,50 @@ export default function App() {
         <table>
           <thead>
             <tr>
+              <th></th>
               <th>ID</th>
               <th>Source App</th>
               <th>Level</th>
-              <th>Message</th>
               <th>Timestamp</th>
             </tr>
           </thead>
           <tbody>
             {logs.map((log) => (
-              <tr key={log.id}>
-                <td>{log.id}</td>
-                <td>{log.sourceApp}</td>
-                <td>{log.level}</td>
-                <td>{log.message}</td>
-                <td>{log.timestamp}</td>
-              </tr>
+              <React.Fragment key={log.id}>
+                <tr
+                  className="log-row"
+                  onClick={() => toggleExpand(log.id)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <td className="arrow">
+                    {expandedRows.includes(log.id) ? "▾" : "▸"}
+                  </td>
+                  <td>{log.id}</td>
+                  <td>{log.sourceApp}</td>
+                  <td
+                    className={
+                      log.level === "ERROR"
+                        ? "error"
+                        : log.level === "WARN"
+                        ? "warn"
+                        : "info"
+                    }
+                  >
+                    {log.level}
+                  </td>
+                  <td>{new Date(log.timestamp).toLocaleString()}</td>
+                </tr>
+
+                {expandedRows.includes(log.id) && (
+                  <tr className="expanded-row">
+                    <td colSpan="5">
+                      <div className="log-message">
+                        <strong>Message:</strong> {log.message}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
           </tbody>
         </table>
