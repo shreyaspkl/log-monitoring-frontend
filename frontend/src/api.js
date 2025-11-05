@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Replace with your Render backend URL
 const API = axios.create({
-  baseURL: "https://<your-backend>.onrender.com/api",
+  baseURL: "https://logs-monitoring.onrender.com/api",
 });
 
 export const getLogs = () => API.get("/logs");
