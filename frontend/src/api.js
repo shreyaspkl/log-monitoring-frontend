@@ -5,6 +5,7 @@ const API = axios.create({
   baseURL: "https://logs-monitoring.onrender.com/api",
 });
 
-export const getLogs = () => API.get("/logs");
+export const getLogs = (params) => API.get("/logs", { params });
 export const addLog = (data) => API.post("/logs", data);
 export const getCountByLevel = () => API.get("/logs/countByLevel");
+export const getDistinctValues = () => API.get("/logs/distinctValues");
