@@ -3,7 +3,7 @@ import { getLogs, getDistinctValues } from "./api";
 import "./App.css";
 
 export default function App() {
-  const [logs, setLogs] = useState({});
+  const [logs, setLogs] = useState([]);
   const [expandedRows, setExpandedRows] = useState([]);
 
   const [filters, setFilters] = useState({
@@ -30,18 +30,20 @@ export default function App() {
     fetchOptions();   // populate dropdowns
   }, []);
 
-  const fetchData = async (params = {}) => {
-    try {
-      setLoadingLogs(true);
-      const logsRes = await getLogs(params);
-      setLogs(logsRes.data || []);
-    } catch (err) {
-      console.error("API Error:", err);
-      alert("Failed to load logs. Check console/network.");
-    } finally {
-      setLoadingLogs(false);
-    }
-  };
+const fetchData = async (params = {}) => {
+  try {
+    setLoadingLogs(true);
+    const logsRes = await getLogs(params);
+
+    const data = logsRes.data;
+    setLogs(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("API Error:", err);
+  } finally {
+    setLoadingLogs(false);
+  }
+};
+
 
   const fetchOptions = async () => {
     try {
