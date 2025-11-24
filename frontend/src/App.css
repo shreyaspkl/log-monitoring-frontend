@@ -125,3 +125,100 @@ h1 {
   color: #4caf50;
   font-weight: 600;
 }
+/* Filters styling */
+.filters.card, .log-table.card {
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(20, 30, 60, 0.06);
+  margin-bottom: 20px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.filter-row label {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: #333;
+  min-width: 160px;
+}
+
+.filter-row select,
+.filter-row input[type="datetime-local"] {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #e4e7ee;
+  background: #fbfdff;
+  font-size: 14px;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  align-items: end;
+}
+
+.btn-primary {
+  background-color: #2563eb;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Table tweaks */
+.log-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.log-table thead th {
+  background: #2f6fd3;
+  color: #fff;
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.log-row td, .expanded-row td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.expanded-row td {
+  background: #f8fbff;
+}
+
+.log-message {
+  padding: 12px;
+  border-left: 3px solid #3b82f6;
+  background: #f1f8ff;
+  border-radius: 4px;
+}
+
+/* Level colors */
+.error { color: #dc2626; font-weight: 600; }
+.warn { color: #d97706; font-weight: 600; }
+.info { color: #16a34a; font-weight: 600; }

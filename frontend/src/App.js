@@ -7,7 +7,6 @@ export default function App() {
   const [countByLevel, setCountByLevel] = useState({});
   const [expandedRows, setExpandedRows] = useState([]);
 
-  // filter state
   const [filters, setFilters] = useState({
     projectName: "",
     appName: "",
@@ -24,36 +23,48 @@ export default function App() {
     levels: [],
   });
 
+  const [loadingOptions, setLoadingOptions] = useState(false);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+
   useEffect(() => {
-    // initial load (no filters)
-    fetchData();
-    fetchOptions();
+    fetchData();      // load logs (no filters)
+    fetchOptions();   // populate dropdowns
   }, []);
 
   const fetchData = async (params = {}) => {
     try {
+      setLoadingLogs(true);
       const [logsRes, countRes] = await Promise.all([
         getLogs(params),
         getCountByLevel(),
       ]);
-      setLogs(logsRes.data); // already ordered server-side desc
-      setCountByLevel(countRes.data);
+      setLogs(logsRes.data || []);
+      setCountByLevel(countRes.data || {});
     } catch (err) {
       console.error("API Error:", err);
+      alert("Failed to load logs. Check console/network.");
+    } finally {
+      setLoadingLogs(false);
     }
   };
 
   const fetchOptions = async () => {
     try {
+      setLoadingOptions(true);
       const res = await getDistinctValues();
+      // handle different shapes gracefully
+      const d = res.data || {};
       setOptions({
-        projects: Array.from(res.data.projects || []),
-        apps: Array.from(res.data.apps || []),
-        microservices: Array.from(res.data.microservices || []),
-        levels: Array.from(res.data.levels || []),
+        projects: Array.isArray(d.projects) ? d.projects : (d.projects ? Object.values(d.projects) : []),
+        apps: Array.isArray(d.apps) ? d.apps : (d.apps ? Object.values(d.apps) : []),
+        microservices: Array.isArray(d.microservices) ? d.microservices : (d.microservices ? Object.values(d.microservices) : []),
+        levels: Array.isArray(d.levels) ? d.levels : (d.levels ? Object.values(d.levels) : []),
       });
     } catch (err) {
       console.error("Failed to load filter options", err);
+      // keep options empty rather than crashing; user sees All.
+    } finally {
+      setLoadingOptions(false);
     }
   };
 
@@ -69,15 +80,21 @@ export default function App() {
   };
 
   const applyFilters = () => {
-    // prepare params only for non-empty values
+    // Build params only for non-empty values
     const params = {};
     if (filters.projectName) params.projectName = filters.projectName;
     if (filters.appName) params.appName = filters.appName;
     if (filters.microservice) params.microservice = filters.microservice;
     if (filters.level) params.level = filters.level;
-    // Dates: send ISO strings if present
-    if (filters.fromTs) params.fromTs = new Date(filters.fromTs).toISOString();
-    if (filters.toTs) params.toTs = new Date(filters.toTs).toISOString();
+
+    // datetime-local value: "2025-11-05T12:30" (no timezone). Send it as-is.
+    if (filters.fromTs) {
+      // ensure seconds appended (backend parser expects "HH:mm:ss" or accepts "HH:mm")
+      params.fromTs = filters.fromTs.length === 16 ? filters.fromTs + ":00" : filters.fromTs;
+    }
+    if (filters.toTs) {
+      params.toTs = filters.toTs.length === 16 ? filters.toTs + ":00" : filters.toTs;
+    }
 
     fetchData(params);
   };
@@ -100,7 +117,8 @@ export default function App() {
 
       <section className="summary">
         <h3>📊 Log Count by Level</h3>
-        <ul>
+        <ul className="count-list">
+          {Object.entries(countByLevel).length === 0 && <li>No logs yet</li>}
           {Object.entries(countByLevel).map(([level, count]) => (
             <li key={level}>
               <b>{level}</b>: {count}
@@ -109,8 +127,9 @@ export default function App() {
         </ul>
       </section>
 
-      <section className="filters">
+      <section className="filters card">
         <h3>🔎 Filters</h3>
+
         <div className="filter-row">
           <label>
             Project
@@ -156,22 +175,36 @@ export default function App() {
         <div className="filter-row">
           <label>
             From
-            <input name="fromTs" type="datetime-local" value={filters.fromTs} onChange={handleFilterChange} />
+            <input
+              name="fromTs"
+              type="datetime-local"
+              value={filters.fromTs}
+              onChange={handleFilterChange}
+              placeholder="From"
+            />
           </label>
 
           <label>
             To
-            <input name="toTs" type="datetime-local" value={filters.toTs} onChange={handleFilterChange} />
+            <input
+              name="toTs"
+              type="datetime-local"
+              value={filters.toTs}
+              onChange={handleFilterChange}
+              placeholder="To"
+            />
           </label>
 
           <div className="filter-actions">
-            <button onClick={applyFilters}>Apply Filters</button>
-            <button onClick={clearFilters}>Clear</button>
+            <button className="btn-primary" onClick={applyFilters} disabled={loadingLogs}>
+              {loadingLogs ? "Loading..." : "Apply Filters"}
+            </button>
+            <button onClick={clearFilters} className="btn-secondary">Clear</button>
           </div>
         </div>
       </section>
 
-      <section className="log-table">
+      <section className="log-table card">
         <h3>📜 Recent Logs</h3>
         <table>
           <thead>
@@ -187,6 +220,12 @@ export default function App() {
             </tr>
           </thead>
           <tbody>
+            {logs.length === 0 && (
+              <tr>
+                <td colSpan="8">No logs found</td>
+              </tr>
+            )}
+
             {logs.map((log) => (
               <React.Fragment key={log.id}>
                 <tr
@@ -202,15 +241,7 @@ export default function App() {
                   <td>{log.appName}</td>
                   <td>{log.microservice}</td>
                   <td>{log.sourceApp}</td>
-                  <td
-                    className={
-                      log.level === "ERROR"
-                        ? "error"
-                        : log.level === "WARN"
-                        ? "warn"
-                        : "info"
-                    }
-                  >
+                  <td className={log.level === "ERROR" ? "error" : log.level === "WARN" ? "warn" : "info"}>
                     {log.level}
                   </td>
                   <td>{new Date(log.timestamp).toLocaleString()}</td>
