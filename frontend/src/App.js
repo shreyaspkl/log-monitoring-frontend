@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { getLogs, getCountByLevel, getDistinctValues } from "./api";
+import { getLogs, getDistinctValues } from "./api";
 import "./App.css";
 
 export default function App() {
-  const [logs, setLogs] = useState([]);
-  const [countByLevel, setCountByLevel] = useState({});
+  const [logs, setLogs] = useState({});
   const [expandedRows, setExpandedRows] = useState([]);
 
   const [filters, setFilters] = useState({
@@ -34,12 +33,8 @@ export default function App() {
   const fetchData = async (params = {}) => {
     try {
       setLoadingLogs(true);
-      const [logsRes, countRes] = await Promise.all([
-        getLogs(params),
-        getCountByLevel(),
-      ]);
+      const logsRes = await getLogs(params);
       setLogs(logsRes.data || []);
-      setCountByLevel(countRes.data || {});
     } catch (err) {
       console.error("API Error:", err);
       alert("Failed to load logs. Check console/network.");
@@ -52,7 +47,6 @@ export default function App() {
     try {
       setLoadingOptions(true);
       const res = await getDistinctValues();
-      // handle different shapes gracefully
       const d = res.data || {};
       setOptions({
         projects: Array.isArray(d.projects) ? d.projects : (d.projects ? Object.values(d.projects) : []),
@@ -62,7 +56,6 @@ export default function App() {
       });
     } catch (err) {
       console.error("Failed to load filter options", err);
-      // keep options empty rather than crashing; user sees All.
     } finally {
       setLoadingOptions(false);
     }
@@ -80,16 +73,12 @@ export default function App() {
   };
 
   const applyFilters = () => {
-    // Build params only for non-empty values
     const params = {};
     if (filters.projectName) params.projectName = filters.projectName;
     if (filters.appName) params.appName = filters.appName;
     if (filters.microservice) params.microservice = filters.microservice;
     if (filters.level) params.level = filters.level;
-
-    // datetime-local value: "2025-11-05T12:30" (no timezone). Send it as-is.
     if (filters.fromTs) {
-      // ensure seconds appended (backend parser expects "HH:mm:ss" or accepts "HH:mm")
       params.fromTs = filters.fromTs.length === 16 ? filters.fromTs + ":00" : filters.fromTs;
     }
     if (filters.toTs) {
@@ -115,18 +104,7 @@ export default function App() {
     <div className="container">
       <h1>☁️ Cloud Log Monitoring Dashboard</h1>
 
-//      <section className="summary">
-//        <h3>📊 Log Count by Level</h3>
-//        <ul className="count-list">
-//          {Object.entries(countByLevel).length === 0 && <li>No logs yet</li>}
-//          {Object.entries(countByLevel).map(([level, count]) => (
-//            <li key={level}>
-//              <b>{level}</b>: {count}
-//            </li>
-//          ))}
-//        </ul>
-//      </section>
-
+      {/* Filters */}
       <section className="filters card">
         <h3>🔎 Filters</h3>
 
@@ -204,6 +182,7 @@ export default function App() {
         </div>
       </section>
 
+      {/* Logs table */}
       <section className="log-table card">
         <h3>📜 Recent Logs</h3>
         <table>
@@ -220,7 +199,7 @@ export default function App() {
             </tr>
           </thead>
           <tbody>
-            {logs.length === 0 && (
+            {(!logs || logs.length === 0) && (
               <tr>
                 <td colSpan="8">No logs found</td>
               </tr>
