@@ -115,17 +115,17 @@ export default function App() {
     <div className="container">
       <h1>☁️ Cloud Log Monitoring Dashboard</h1>
 
-      <section className="summary">
-        <h3>📊 Log Count by Level</h3>
-        <ul className="count-list">
-          {Object.entries(countByLevel).length === 0 && <li>No logs yet</li>}
-          {Object.entries(countByLevel).map(([level, count]) => (
-            <li key={level}>
-              <b>{level}</b>: {count}
-            </li>
-          ))}
-        </ul>
-      </section>
+//      <section className="summary">
+//        <h3>📊 Log Count by Level</h3>
+//        <ul className="count-list">
+//          {Object.entries(countByLevel).length === 0 && <li>No logs yet</li>}
+//          {Object.entries(countByLevel).map(([level, count]) => (
+//            <li key={level}>
+//              <b>{level}</b>: {count}
+//            </li>
+//          ))}
+//        </ul>
+//      </section>
 
       <section className="filters card">
         <h3>🔎 Filters</h3>
