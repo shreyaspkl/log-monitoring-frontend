@@ -2,26 +2,26 @@
 import React, { useState } from "react";
 import { login } from "./api";
 
-export default function Login({ onLogin }) {
+export default function Login({ onSuccess, showSignup }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const submit = async (e) => {
     e?.preventDefault();
+    setLoading(true);
     try {
-      setLoading(true);
       const res = await login({ username, password });
-      // expecting { token: "..." } from backend
       if (res?.data?.token) {
         localStorage.setItem("token", res.data.token);
-        onLogin && onLogin(res.data);
+        onSuccess && onSuccess();
       } else {
-        alert("Login succeeded but no token found in response.");
+        alert("Login succeeded but token missing.");
       }
     } catch (err) {
       console.error(err);
-      alert("Invalid credentials or server error.");
+      const msg = err?.response?.data?.error || "Invalid credentials";
+      alert(msg);
     } finally {
       setLoading(false);
     }
@@ -43,8 +43,21 @@ export default function Login({ onLogin }) {
           <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? "Signing in…" : "Sign in"}
           </button>
-          <button type="button" className="btn-secondary" onClick={() => { setUsername(""); setPassword(""); }}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => { setUsername(""); setPassword(""); }}
+            disabled={loading}
+          >
             Clear
+          </button>
+          <button
+            type="button"
+            className="btn-link"
+            onClick={showSignup}
+            style={{ marginLeft: 8 }}
+          >
+            Create account
           </button>
         </div>
       </form>

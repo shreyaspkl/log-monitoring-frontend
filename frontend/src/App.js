@@ -1,8 +1,9 @@
 // src/App.js
 import React, { useEffect, useState } from "react";
-import { getLogs, getDistinctValues, me } from "./api";
+import { getLogs, getDistinctValues, me, logout } from "./api";
 import "./App.css";
 import Login from "./Login";
+import Signup from "./Signup";
 
 export default function App() {
   const [logs, setLogs] = useState([]);
@@ -28,25 +29,31 @@ export default function App() {
   const [loadingLogs, setLoadingLogs] = useState(false);
 
   const [user, setUser] = useState(null);
+  const [view, setView] = useState("loading"); // loading | auth | signup | dashboard
 
   useEffect(() => {
-    // Try to fetch 'me' to verify token & show user
     const verify = async () => {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) {
+        setView("auth");
+        return;
+      }
       try {
         const res = await me();
-        setUser(res.data || { name: res.data });
+        setUser(res.data || { username: res.data });
+        setView("dashboard");
+        // load data after verified
+        fetchData();
+        fetchOptions();
       } catch (err) {
-        console.warn("Not authenticated or token invalid");
+        console.warn("Token invalid:", err);
         localStorage.removeItem("token");
         setUser(null);
+        setView("auth");
       }
     };
     verify();
-
-    fetchData();      // load logs (no filters)
-    fetchOptions();   // populate dropdowns
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async (params = {}) => {
@@ -119,22 +126,31 @@ export default function App() {
     fetchData();
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
+  const handleLogout = async () => {
+    await logout();
     setUser(null);
-    window.location.reload();
+    setView("auth");
   };
 
-  // If not logged in, show Login component
-  if (!localStorage.getItem("token") || !user) {
+  // Auth views
+  if (view === "loading") return <div className="container">Loading...</div>;
+
+  if (view === "auth") {
     return (
       <div className="container">
         <h1>☁️ Cloud Log Monitoring Dashboard</h1>
-        <Login onLogin={() => {
-          // after login, re-check user and refresh UI
-          setUser({}); // temporary optimistic
-          window.location.reload();
-        }} />
+        <Login onSuccess={() => {
+          // after login, verify and move to dashboard
+          me().then(res => {
+            setUser(res.data || { username: res.data });
+            setView("dashboard");
+            fetchData();
+            fetchOptions();
+          }).catch(() => {
+            localStorage.removeItem("token");
+            setView("auth");
+          });
+        }} showSignup={() => setView("signup")} />
         <p style={{ marginTop: 12, color: "#666" }}>
           You can still view logs without login if your backend allows it.
         </p>
@@ -142,6 +158,25 @@ export default function App() {
     );
   }
 
+  if (view === "signup") {
+    return (
+      <div className="container">
+        <h1>☁️ Cloud Log Monitoring Dashboard</h1>
+        <Signup onRegistered={() => {
+          me().then(res => {
+            setUser(res.data || { username: res.data });
+            setView("dashboard");
+            fetchData();
+            fetchOptions();
+          }).catch(() => {
+            setView("auth");
+          });
+        }} onCancel={() => setView("auth")} />
+      </div>
+    );
+  }
+
+  // Dashboard (authenticated)
   return (
     <div className="container">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -212,7 +247,7 @@ export default function App() {
 
           <label>
             To
-            <input
+              <input
               name="toTs"
               type="datetime-local"
               value={filters.toTs}
