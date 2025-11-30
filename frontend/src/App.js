@@ -1,7 +1,7 @@
+import {  getMyProjects } from "./api"; // ensure getMyProjects is imported at top of file
 import React, { useEffect, useState } from "react";
 import { getLogs, getDistinctValues } from "./api";
 import "./App.css";
-import { getDistinctValues, getMyProjects } from "./api"; // ensure getMyProjects is imported at top of file
 
 export default function App() {
   const [logs, setLogs] = useState([]);
