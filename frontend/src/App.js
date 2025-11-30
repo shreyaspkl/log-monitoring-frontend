@@ -1,9 +1,7 @@
-// src/App.js
 import React, { useEffect, useState } from "react";
-import { getLogs, getDistinctValues, me, logout } from "./api";
+import { getLogs, getDistinctValues } from "./api";
 import "./App.css";
-import Login from "./Login";
-import Signup from "./Signup";
+import { getDistinctValues, getMyProjects } from "./api"; // ensure getMyProjects is imported at top of file
 
 export default function App() {
   const [logs, setLogs] = useState([]);
@@ -28,65 +26,94 @@ export default function App() {
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [loadingLogs, setLoadingLogs] = useState(false);
 
-  const [user, setUser] = useState(null);
-  const [view, setView] = useState("loading"); // loading | auth | signup | dashboard
-
   useEffect(() => {
-    const verify = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setView("auth");
-        return;
-      }
-      try {
-        const res = await me();
-        setUser(res.data || { username: res.data });
-        setView("dashboard");
-        // load data after verified
-        fetchData();
-        fetchOptions();
-      } catch (err) {
-        console.warn("Token invalid:", err);
-        localStorage.removeItem("token");
-        setUser(null);
-        setView("auth");
-      }
-    };
-    verify();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchData();      // load logs (no filters)
+    fetchOptions();   // populate dropdowns
   }, []);
 
-  const fetchData = async (params = {}) => {
-    try {
-      setLoadingLogs(true);
-      const logsRes = await getLogs(params);
-      const data = logsRes.data;
-      setLogs(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("API Error:", err);
-      setLogs([]);
-    } finally {
-      setLoadingLogs(false);
-    }
-  };
+const fetchData = async (params = {}) => {
+  try {
+    setLoadingLogs(true);
+    const logsRes = await getLogs(params);
 
-  const fetchOptions = async () => {
-    try {
-      setLoadingOptions(true);
-      const res = await getDistinctValues();
-      const d = res.data || {};
-      setOptions({
-        projects: Array.isArray(d.projects) ? d.projects : (d.projects ? Object.values(d.projects) : []),
-        apps: Array.isArray(d.apps) ? d.apps : (d.apps ? Object.values(d.apps) : []),
-        microservices: Array.isArray(d.microservices) ? d.microservices : (d.microservices ? Object.values(d.microservices) : []),
-        levels: Array.isArray(d.levels) ? d.levels : (d.levels ? Object.values(d.levels) : []),
-      });
-    } catch (err) {
-      console.error("Failed to load filter options", err);
-    } finally {
-      setLoadingOptions(false);
+    const data = logsRes.data;
+    setLogs(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("API Error:", err);
+  } finally {
+    setLoadingLogs(false);
+  }
+};
+
+const fetchOptions = async () => {
+  try {
+    setLoadingOptions(true);
+
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      // If authenticated, prefer server-side list of projects the user can view
+      try {
+        const myRes = await getMyProjects();
+        const myProjects = (myRes?.data?.projects) || [];
+
+        if (Array.isArray(myProjects) && myProjects.length > 0) {
+          // We have an explicit permitted list from server — use it for projects
+          // But still fetch other fields (apps/microservices/levels) from distinctValues
+          const distinctRes = await getDistinctValues();
+          const d = distinctRes.data || {};
+          setOptions({
+            projects: myProjects,
+            apps: Array.isArray(d.apps) ? d.apps : (d.apps ? Object.values(d.apps) : []),
+            microservices: Array.isArray(d.microservices) ? d.microservices : (d.microservices ? Object.values(d.microservices) : []),
+            levels: Array.isArray(d.levels) ? d.levels : (d.levels ? Object.values(d.levels) : []),
+          });
+          return;
+        } else {
+          // Authenticated but server returned empty permitted list:
+          // Could mean user is admin (we let them see all), or they have no explicit project permissions.
+          // Fall back to distinctValues to populate full dropdowns; backend will enforce access when fetching logs.
+          const distinctRes = await getDistinctValues();
+          const d = distinctRes.data || {};
+          setOptions({
+            projects: Array.isArray(d.projects) ? d.projects : (d.projects ? Object.values(d.projects) : []),
+            apps: Array.isArray(d.apps) ? d.apps : (d.apps ? Object.values(d.apps) : []),
+            microservices: Array.isArray(d.microservices) ? d.microservices : (d.microservices ? Object.values(d.microservices) : []),
+            levels: Array.isArray(d.levels) ? d.levels : (d.levels ? Object.values(d.levels) : []),
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn("Couldn't fetch my projects or fallback failed:", err);
+        // If any error, fallback to distinctValues
+        const distinctRes = await getDistinctValues();
+        const d = distinctRes.data || {};
+        setOptions({
+          projects: Array.isArray(d.projects) ? d.projects : (d.projects ? Object.values(d.projects) : []),
+          apps: Array.isArray(d.apps) ? d.apps : (d.apps ? Object.values(d.apps) : []),
+          microservices: Array.isArray(d.microservices) ? d.microservices : (d.microservices ? Object.values(d.microservices) : []),
+          levels: Array.isArray(d.levels) ? d.levels : (d.levels ? Object.values(d.levels) : []),
+        });
+        return;
+      }
     }
-  };
+
+    // Not authenticated -> load global distinct values
+    const res = await getDistinctValues();
+    const d = res.data || {};
+    setOptions({
+      projects: Array.isArray(d.projects) ? d.projects : (d.projects ? Object.values(d.projects) : []),
+      apps: Array.isArray(d.apps) ? d.apps : (d.apps ? Object.values(d.apps) : []),
+      microservices: Array.isArray(d.microservices) ? d.microservices : (d.microservices ? Object.values(d.microservices) : []),
+      levels: Array.isArray(d.levels) ? d.levels : (d.levels ? Object.values(d.levels) : []),
+    });
+  } catch (err) {
+    console.error("Failed to load filter options", err);
+    setOptions({ projects: [], apps: [], microservices: [], levels: [] });
+  } finally {
+    setLoadingOptions(false);
+  }
+};
 
   const toggleExpand = (logId) => {
     setExpandedRows((prev) =>
@@ -99,20 +126,36 @@ export default function App() {
     setFilters((p) => ({ ...p, [name]: value }));
   };
 
-  const applyFilters = () => {
-    const params = {};
-    if (filters.projectName) params.projectName = filters.projectName;
-    if (filters.appName) params.appName = filters.appName;
-    if (filters.microservice) params.microservice = filters.microservice;
-    if (filters.level) params.level = filters.level;
-    if (filters.fromTs) {
-      params.fromTs = filters.fromTs.length === 16 ? filters.fromTs + ":00" : filters.fromTs;
+const applyFilters = async () => {
+  const params = {};
+  if (filters.projectName) params.projectName = filters.projectName;
+  if (filters.appName) params.appName = filters.appName;
+  if (filters.microservice) params.microservice = filters.microservice;
+  if (filters.level) params.level = filters.level;
+  if (filters.fromTs) {
+    params.fromTs = filters.fromTs.length === 16 ? filters.fromTs + ":00" : filters.fromTs;
+  }
+  if (filters.toTs) {
+    params.toTs = filters.toTs.length === 16 ? filters.toTs + ":00" : filters.toTs;
+  }
+
+  try {
+    setLoadingLogs(true);
+    await fetchData(params);
+  } catch (err) {
+    // handle authorization error from backend
+    if (err?.response?.status === 403) {
+      // friendly UI message
+      alert(err.response.data?.error || "You do not have permission to view logs for the selected project.");
+      return;
     }
-    if (filters.toTs) {
-      params.toTs = filters.toTs.length === 16 ? filters.toTs + ":00" : filters.toTs;
-    }
-    fetchData(params);
-  };
+    console.error("Failed to apply filters", err);
+    alert("Failed to apply filters. Check console for details.");
+  } finally {
+    setLoadingLogs(false);
+  }
+};
+
 
   const clearFilters = () => {
     setFilters({
@@ -126,66 +169,9 @@ export default function App() {
     fetchData();
   };
 
-  const handleLogout = async () => {
-    await logout();
-    setUser(null);
-    setView("auth");
-  };
-
-  // Auth views
-  if (view === "loading") return <div className="container">Loading...</div>;
-
-  if (view === "auth") {
-    return (
-      <div className="container">
-        <h1>☁️ Cloud Log Monitoring Dashboard</h1>
-        <Login onSuccess={() => {
-          // after login, verify and move to dashboard
-          me().then(res => {
-            setUser(res.data || { username: res.data });
-            setView("dashboard");
-            fetchData();
-            fetchOptions();
-          }).catch(() => {
-            localStorage.removeItem("token");
-            setView("auth");
-          });
-        }} showSignup={() => setView("signup")} />
-        <p style={{ marginTop: 12, color: "#666" }}>
-          You can still view logs without login if your backend allows it.
-        </p>
-      </div>
-    );
-  }
-
-  if (view === "signup") {
-    return (
-      <div className="container">
-        <h1>☁️ Cloud Log Monitoring Dashboard</h1>
-        <Signup onRegistered={() => {
-          me().then(res => {
-            setUser(res.data || { username: res.data });
-            setView("dashboard");
-            fetchData();
-            fetchOptions();
-          }).catch(() => {
-            setView("auth");
-          });
-        }} onCancel={() => setView("auth")} />
-      </div>
-    );
-  }
-
-  // Dashboard (authenticated)
   return (
     <div className="container">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1>☁️ Cloud Log Monitoring Dashboard</h1>
-        <div>
-          <span style={{ marginRight: 12 }}>Signed in: {user?.name || user?.username || "You"}</span>
-          <button className="btn-secondary" onClick={handleLogout}>Logout</button>
-        </div>
-      </div>
+      <h1>☁️ Cloud Log Monitoring Dashboard</h1>
 
       {/* Filters */}
       <section className="filters card">
@@ -194,7 +180,7 @@ export default function App() {
         <div className="filter-row">
           <label>
             Project
-            <select name="projectName" value={filters.projectName} onChange={handleFilterChange} disabled={loadingOptions}>
+            <select name="projectName" value={filters.projectName} onChange={handleFilterChange}>
               <option value="">All</option>
               {options.projects.map((p) => (
                 <option key={p} value={p}>{p}</option>
@@ -204,7 +190,7 @@ export default function App() {
 
           <label>
             App
-            <select name="appName" value={filters.appName} onChange={handleFilterChange} disabled={loadingOptions}>
+            <select name="appName" value={filters.appName} onChange={handleFilterChange}>
               <option value="">All</option>
               {options.apps.map((a) => (
                 <option key={a} value={a}>{a}</option>
@@ -214,7 +200,7 @@ export default function App() {
 
           <label>
             Microservice
-            <select name="microservice" value={filters.microservice} onChange={handleFilterChange} disabled={loadingOptions}>
+            <select name="microservice" value={filters.microservice} onChange={handleFilterChange}>
               <option value="">All</option>
               {options.microservices.map((m) => (
                 <option key={m} value={m}>{m}</option>
@@ -224,7 +210,7 @@ export default function App() {
 
           <label>
             Level
-            <select name="level" value={filters.level} onChange={handleFilterChange} disabled={loadingOptions}>
+            <select name="level" value={filters.level} onChange={handleFilterChange}>
               <option value="">All</option>
               {options.levels.map((l) => (
                 <option key={l} value={l}>{l}</option>
@@ -247,7 +233,7 @@ export default function App() {
 
           <label>
             To
-              <input
+            <input
               name="toTs"
               type="datetime-local"
               value={filters.toTs}
@@ -268,7 +254,6 @@ export default function App() {
       {/* Logs table */}
       <section className="log-table card">
         <h3>📜 Recent Logs</h3>
-
         <table>
           <thead>
             <tr>
