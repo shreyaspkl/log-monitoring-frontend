@@ -1,6 +1,8 @@
+// src/App.js
 import React, { useEffect, useState } from "react";
-import { getLogs, getDistinctValues } from "./api";
+import { getLogs, getDistinctValues, me } from "./api";
 import "./App.css";
+import Login from "./Login";
 
 export default function App() {
   const [logs, setLogs] = useState([]);
@@ -25,25 +27,41 @@ export default function App() {
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [loadingLogs, setLoadingLogs] = useState(false);
 
+  const [user, setUser] = useState(null);
+
   useEffect(() => {
+    // Try to fetch 'me' to verify token & show user
+    const verify = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await me();
+        setUser(res.data || { name: res.data });
+      } catch (err) {
+        console.warn("Not authenticated or token invalid");
+        localStorage.removeItem("token");
+        setUser(null);
+      }
+    };
+    verify();
+
     fetchData();      // load logs (no filters)
     fetchOptions();   // populate dropdowns
   }, []);
 
-const fetchData = async (params = {}) => {
-  try {
-    setLoadingLogs(true);
-    const logsRes = await getLogs(params);
-
-    const data = logsRes.data;
-    setLogs(Array.isArray(data) ? data : []);
-  } catch (err) {
-    console.error("API Error:", err);
-  } finally {
-    setLoadingLogs(false);
-  }
-};
-
+  const fetchData = async (params = {}) => {
+    try {
+      setLoadingLogs(true);
+      const logsRes = await getLogs(params);
+      const data = logsRes.data;
+      setLogs(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("API Error:", err);
+      setLogs([]);
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
 
   const fetchOptions = async () => {
     try {
@@ -86,7 +104,6 @@ const fetchData = async (params = {}) => {
     if (filters.toTs) {
       params.toTs = filters.toTs.length === 16 ? filters.toTs + ":00" : filters.toTs;
     }
-
     fetchData(params);
   };
 
@@ -102,9 +119,38 @@ const fetchData = async (params = {}) => {
     fetchData();
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+    window.location.reload();
+  };
+
+  // If not logged in, show Login component
+  if (!localStorage.getItem("token") || !user) {
+    return (
+      <div className="container">
+        <h1>☁️ Cloud Log Monitoring Dashboard</h1>
+        <Login onLogin={() => {
+          // after login, re-check user and refresh UI
+          setUser({}); // temporary optimistic
+          window.location.reload();
+        }} />
+        <p style={{ marginTop: 12, color: "#666" }}>
+          You can still view logs without login if your backend allows it.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="container">
-      <h1>☁️ Cloud Log Monitoring Dashboard</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1>☁️ Cloud Log Monitoring Dashboard</h1>
+        <div>
+          <span style={{ marginRight: 12 }}>Signed in: {user?.name || user?.username || "You"}</span>
+          <button className="btn-secondary" onClick={handleLogout}>Logout</button>
+        </div>
+      </div>
 
       {/* Filters */}
       <section className="filters card">
@@ -113,7 +159,7 @@ const fetchData = async (params = {}) => {
         <div className="filter-row">
           <label>
             Project
-            <select name="projectName" value={filters.projectName} onChange={handleFilterChange}>
+            <select name="projectName" value={filters.projectName} onChange={handleFilterChange} disabled={loadingOptions}>
               <option value="">All</option>
               {options.projects.map((p) => (
                 <option key={p} value={p}>{p}</option>
@@ -123,7 +169,7 @@ const fetchData = async (params = {}) => {
 
           <label>
             App
-            <select name="appName" value={filters.appName} onChange={handleFilterChange}>
+            <select name="appName" value={filters.appName} onChange={handleFilterChange} disabled={loadingOptions}>
               <option value="">All</option>
               {options.apps.map((a) => (
                 <option key={a} value={a}>{a}</option>
@@ -133,7 +179,7 @@ const fetchData = async (params = {}) => {
 
           <label>
             Microservice
-            <select name="microservice" value={filters.microservice} onChange={handleFilterChange}>
+            <select name="microservice" value={filters.microservice} onChange={handleFilterChange} disabled={loadingOptions}>
               <option value="">All</option>
               {options.microservices.map((m) => (
                 <option key={m} value={m}>{m}</option>
@@ -143,7 +189,7 @@ const fetchData = async (params = {}) => {
 
           <label>
             Level
-            <select name="level" value={filters.level} onChange={handleFilterChange}>
+            <select name="level" value={filters.level} onChange={handleFilterChange} disabled={loadingOptions}>
               <option value="">All</option>
               {options.levels.map((l) => (
                 <option key={l} value={l}>{l}</option>
@@ -187,6 +233,7 @@ const fetchData = async (params = {}) => {
       {/* Logs table */}
       <section className="log-table card">
         <h3>📜 Recent Logs</h3>
+
         <table>
           <thead>
             <tr>
