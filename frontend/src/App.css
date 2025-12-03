@@ -1,224 +1,372 @@
-.App {
-  text-align: center;
+/* =========================
+   App base + layout
+   ========================= */
+:root{
+  --bg: #f7f9fc;
+  --card-bg: #ffffff;
+  --muted: #6b7280;
+  --primary: #2563eb;
+  --primary-600: #1f4ed8;
+  --accent: #3b82f6;
+  --success: #16a34a;
+  --warn: #d97706;
+  --danger: #dc2626;
+  --surface-shadow: 0 6px 18px rgba(20,30,60,0.06);
+  --card-radius: 10px;
+  --glass: rgba(255,255,255,0.6);
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
+* { box-sizing: border-box; }
+html,body,#root { height: 100%; }
 body {
-  background-color: #f7f9fc;
+  margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg);
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.4;
 }
 
+/* main container */
 .container {
-  width: 90%;
-  max-width: 1100px;
-  margin: 30px auto;
-  background: white;
-  border-radius: 10px;
-  padding: 25px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 92%;
+  max-width: 1150px;
+  margin: 26px auto;
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  padding: 22px;
+  box-shadow: var(--surface-shadow);
+  transition: box-shadow .18s ease;
 }
 
+/* header */
 h1 {
-  text-align: center;
-  margin-bottom: 25px;
+  font-size: 20px;
+  margin: 0 0 14px 0;
+  text-align: left;
+  display: block;
+  color: #0f172a;
 }
 
+/* small top row (user + logout) */
+.header-row {
+  display:flex;
+  justify-content:space-between;
+  gap: 12px;
+  align-items:center;
+  margin-bottom: 14px;
+}
+.header-row h1 { margin: 0; }
+
+/* utility summary area */
 .summary {
   background: #eef2f7;
   border-radius: 8px;
   padding: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
+.summary ul { list-style: none; padding: 0; margin: 0; display: flex; gap: 12px; flex-wrap:wrap; }
+.summary li { font-size: 13px; color: var(--muted); }
 
-.summary ul {
-  list-style: none;
-  padding: 0;
-}
-
-.log-table table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.log-table th {
-  background: #2d6cdf;
-  color: white;
-  padding: 10px;
-  text-align: left;
-}
-
-.log-table td {
-  border-bottom: 1px solid #ddd;
-  padding: 8px;
-}
-
-.log-row:hover {
-  background: #f5f7fa;
-}
-
-.arrow {
-  width: 25px;
-  text-align: center;
-  font-weight: bold;
-  color: #2d6cdf;
-}
-
-.expanded-row {
-  background: #f9fbff;
-}
-
-.log-message {
-  padding: 12px;
-  border-left: 3px solid #2d6cdf;
-  background: #f0f4ff;
-  border-radius: 4px;
-  font-family: monospace;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.error {
-  color: #e53935;
-  font-weight: 600;
-}
-
-.warn {
-  color: #ff9800;
-  font-weight: 600;
-}
-
-.info {
-  color: #4caf50;
-  font-weight: 600;
-}
-/* Filters styling */
-.filters.card, .log-table.card {
-  background: #fff;
+/* =========================
+   Cards (filters, table, auth)
+   ========================= */
+.card {
+  background: var(--card-bg);
   padding: 16px;
   border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(20, 30, 60, 0.06);
-  margin-bottom: 20px;
+  box-shadow: var(--surface-shadow);
+  margin-bottom: 18px;
 }
 
+/* Filters area */
+.filters.card {
+  padding: 14px;
+}
+.filters.card h3 { margin-top: 0; margin-bottom: 10px; font-size: 16px; }
+
+/* layout rows for filter inputs */
 .filter-row {
-  display: flex;
+  display:flex;
   gap: 12px;
   align-items: center;
   flex-wrap: wrap;
   margin-bottom: 12px;
 }
 
+/* each label holds the input */
 .filter-row label {
-  display: flex;
-  flex-direction: column;
+  display:flex;
+  flex-direction:column;
   font-size: 13px;
-  color: #333;
+  color: #374151;
   min-width: 160px;
 }
 
+/* selects & datetime inputs */
 .filter-row select,
-.filter-row input[type="datetime-local"] {
+.filter-row input[type="datetime-local"],
+.filter-row input[type="text"],
+.filter-row input[type="email"],
+.filter-row input[type="password"] {
   margin-top: 6px;
   padding: 8px 10px;
   border-radius: 6px;
-  border: 1px solid #e4e7ee;
+  border: 1px solid #e6edf7;
   background: #fbfdff;
   font-size: 14px;
+  outline: none;
+  transition: box-shadow .12s ease, border-color .12s ease;
+}
+.filter-row select:focus,
+.filter-row input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.08);
 }
 
+/* filter actions */
 .filter-actions {
-  display: flex;
+  display:flex;
   gap: 8px;
   align-items: end;
 }
 
-.btn-primary {
-  background-color: #2563eb;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
+/* =========================
+   Buttons
+   ========================= */
+button {
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1;
 }
 
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(37,99,235,0.08);
+}
+.btn-primary:hover { background-color: var(--primary-600); }
 .btn-primary:disabled {
-  opacity: 0.6;
+  opacity: .65;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .btn-secondary {
   background: transparent;
   border: 1px solid #cbd5e1;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
+  color: #111827;
 }
 
-/* Table tweaks */
+.btn-link {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 6px 8px;
+}
+
+/* =========================
+   Table (logs)
+   ========================= */
+.log-table h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; }
 .log-table table {
-  width: 100%;
+  width:100%;
   border-collapse: collapse;
+  font-size: 14px;
+  table-layout: auto;
 }
 
 .log-table thead th {
-  background: #2f6fd3;
-  color: #fff;
+  background: linear-gradient(180deg,#2f6fd3,#2657c8);
+  color: white;
   padding: 12px;
   text-align: left;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 13px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .log-row td, .expanded-row td {
   padding: 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
 }
 
+.log-row:hover {
+  background: #fbfdff;
+}
+
+.arrow { width: 32px; text-align:center; font-weight: 700; color: var(--accent); }
+
+/* expanded row appearance */
 .expanded-row td {
   background: #f8fbff;
 }
 
 .log-message {
   padding: 12px;
-  border-left: 3px solid #3b82f6;
+  border-left: 3px solid var(--accent);
   background: #f1f8ff;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-family: "Courier New", monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 6px 0;
 }
 
-/* Level colors */
-.error { color: #dc2626; font-weight: 600; }
-.warn { color: #d97706; font-weight: 600; }
-.info { color: #16a34a; font-weight: 600; }
+/* level badges */
+.error { color: var(--danger); font-weight: 700; }
+.warn  { color: var(--warn);   font-weight: 700; }
+.info  { color: var(--success); font-weight: 700; }
+
+/* "No logs" row */
+.log-table td[colspan] {
+  text-align:center;
+  color: var(--muted);
+  padding: 20px;
+}
+
+/* =========================
+   Login / Signup / Auth cards
+   ========================= */
+.login-card, .auth-card {
+  max-width: 420px;
+  margin: 12px auto;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(15,23,42,0.06);
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,252,0.95));
+}
+
+.login-card h3, .auth-card h3 { margin-top: 0; margin-bottom: 10px; font-size: 18px; }
+
+/* form controls inside auth cards */
+.login-card label, .auth-card label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #374151;
+}
+.login-card input, .auth-card input {
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid #e6edf7;
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+/* small action row in login/signup */
+.login-card form > div, .auth-card form > div {
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+  justify-content:flex-start;
+  align-items:center;
+}
+
+/* small helper text */
+.auth-helper {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* =========================
+   Modal & overlay (if used)
+   ========================= */
+.auth-backdrop {
+  position: fixed;
+  inset: 0; /* top:0; right:0; bottom:0; left:0 */
+  background: rgba(2,6,23,0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.auth-modal {
+  width: 420px;
+  max-width: calc(100% - 40px);
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 18px 50px rgba(2,6,23,0.28);
+  position: relative;
+}
+
+/* close button inside modal */
+.auth-close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+  color: #374151;
+}
+
+/* make auth modal form inputs consistent */
+.auth-modal input, .auth-modal select {
+  width: 100%;
+  padding: 9px 10px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid #e6edf7;
+  font-size: 14px;
+}
+
+/* =========================
+   Small screens responsiveness
+   ========================= */
+@media (max-width: 880px) {
+  .filter-row label { min-width: 140px; flex: 1 1 48%; }
+  .header-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .container { padding: 16px; margin: 14px; }
+}
+
+@media (max-width: 560px) {
+  .filter-row { gap: 8px; }
+  .filter-row label { min-width: 100%; flex: 1 1 100%; }
+  .login-card, .auth-card { margin: 8px auto; width: 100%; }
+  .arrow { width: 28px; }
+  .log-table thead th { font-size: 12px; padding: 8px; }
+  .log-row td { padding: 8px; font-size: 13px; }
+}
+
+/* =========================
+   Tiny polish & accessibility
+   ========================= */
+input:focus, select:focus, button:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+}
+
+/* keep monospace for messages */
+.log-message { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace; }
+
+/* link-like button appearance */
+.btn-link { color: var(--primary); background: transparent; border: none; padding: 6px; cursor: pointer; }
+
+/* subtle hover for table rows */
+.log-row:hover { transform: translateY(0px); }
+
+/* Data-empty fallback */
+.no-data { text-align:center; padding: 20px; color: var(--muted); }
+
+/* end of file */
