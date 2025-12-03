@@ -24,8 +24,6 @@ API.interceptors.response.use(
     if (err?.response?.status === 401) {
       // token expired or unauthorized: remove token and reload / redirect to login
       localStorage.removeItem("token");
-      // Optional: window.location.href = '/login';
-      // For now, reload so app shows login UI
       window.location.reload();
     }
     return Promise.reject(err);
@@ -42,6 +40,10 @@ export const getDistinctValues = () => API.get("/logs/distinctValues");
 export const login = (credentials) => API.post("/auth/login", credentials);
 export const register = (payload) => API.post("/auth/register", payload);
 export const me = () => API.get("/auth/me");
+export const logout = () => {
+  localStorage.removeItem("token");
+  return Promise.resolve();
+};
 
-// default export (if any module imports default)
+// default export
 export default API;
