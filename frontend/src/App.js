@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { getLogs, getDistinctValues, me } from "./api";
 import "./App.css";
 import Login from "./Login";
-import SignUp from "./SignUp";
+import SignUp from "./Signup";
 
 export default function App() {
   const [logs, setLogs] = useState([]);
