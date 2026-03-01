@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { login } from "./api";
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, onShowSignUp }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,26 +28,65 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="login-card card">
-      <h3>Login</h3>
-      <form onSubmit={submit}>
-        <label>
-          Username
-          <input value={username} onChange={(e) => setUsername(e.target.value)} required />
-        </label>
-        <label>
-          Password
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </label>
-        <div style={{ display: "flex", gap: 8 }}>
+    <div className="auth-card login-card">
+      <div className="auth-card-header">
+        <h2 className="auth-card-title">Log in</h2>
+        <p className="auth-card-subtitle">
+          Sign in to access the Cloud Log Monitoring Dashboard.
+        </p>
+      </div>
+
+      <form onSubmit={submit} className="auth-form">
+        <section className="auth-form-section">
+          <div className="auth-field">
+            <label htmlFor="login-username">Username</label>
+            <input
+              id="login-username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              autoComplete="username"
+              placeholder="Your username"
+            />
+          </div>
+          <div className="auth-field">
+            <label htmlFor="login-password">Password</label>
+            <input
+              id="login-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              placeholder="••••••••"
+            />
+          </div>
+        </section>
+
+        <div className="auth-form-actions">
           <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? "Signing in…" : "Sign in"}
           </button>
-          <button type="button" className="btn-secondary" onClick={() => { setUsername(""); setPassword(""); }}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              setUsername("");
+              setPassword("");
+            }}
+          >
             Clear
           </button>
         </div>
       </form>
+
+      <div className="auth-card-footer">
+        Don&apos;t have an account?{" "}
+        <button type="button" className="btn-link" onClick={onShowSignUp}>
+          Create account
+        </button>
+      </div>
     </div>
   );
 }

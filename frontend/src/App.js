@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { getLogs, getDistinctValues, me } from "./api";
 import "./App.css";
 import Login from "./Login";
+import SignUp from "./SignUp";
 
 export default function App() {
   const [logs, setLogs] = useState([]);
@@ -28,12 +29,16 @@ export default function App() {
   const [loadingLogs, setLoadingLogs] = useState(false);
 
   const [user, setUser] = useState(null);
+  const [authView, setAuthView] = useState("signup"); // "signup" | "login" — sign up first for new visitors
+  const [authChecking, setAuthChecking] = useState(true); // true until we've finished verifying token (avoids login flash)
 
   useEffect(() => {
-    // Try to fetch 'me' to verify token & show user
     const verify = async () => {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) {
+        setAuthChecking(false);
+        return;
+      }
       try {
         const res = await me();
         setUser(res.data || { name: res.data });
@@ -41,12 +46,14 @@ export default function App() {
         console.warn("Not authenticated or token invalid");
         localStorage.removeItem("token");
         setUser(null);
+      } finally {
+        setAuthChecking(false);
       }
     };
     verify();
 
-    fetchData();      // load logs (no filters)
-    fetchOptions();   // populate dropdowns
+    fetchData();
+    fetchOptions();
   }, []);
 
   const fetchData = async (params = {}) => {
@@ -92,6 +99,18 @@ export default function App() {
     setFilters((p) => ({ ...p, [name]: value }));
   };
 
+  // Format datetime-local value for backend: "yyyy-MM-dd'T'HH:mm:ss" (backend uses ISO_LOCAL_DATE_TIME)
+  const toApiDateTime = (localValue, endOfDay = false) => {
+    if (!localValue || typeof localValue !== "string") return null;
+    const normalized = localValue.length === 16 ? localValue + ":00" : localValue;
+    if (!endOfDay) return normalized;
+    // When filtering "to", use 23:59:59 so the full end date is included
+    if (normalized.endsWith("00:00:00")) {
+      return normalized.slice(0, 11) + "23:59:59";
+    }
+    return normalized;
+  };
+
   const applyFilters = () => {
     const params = {};
     if (filters.projectName) params.projectName = filters.projectName;
@@ -99,10 +118,14 @@ export default function App() {
     if (filters.microservice) params.microservice = filters.microservice;
     if (filters.level) params.level = filters.level;
     if (filters.fromTs) {
-      params.fromTs = filters.fromTs.length === 16 ? filters.fromTs + ":00" : filters.fromTs;
+      params.fromTs = toApiDateTime(filters.fromTs, false);
     }
     if (filters.toTs) {
-      params.toTs = filters.toTs.length === 16 ? filters.toTs + ":00" : filters.toTs;
+      params.toTs = toApiDateTime(filters.toTs, true);
+    }
+    // Avoid cached GET response when using date filters (browsers/proxies may cache /logs)
+    if (params.fromTs || params.toTs) {
+      params._ = Date.now();
     }
     fetchData(params);
   };
@@ -122,19 +145,43 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     setUser(null);
+    setAuthView("login"); // redirect to login page when logged out
+  };
+
+  const handleLoginSuccess = () => {
+    setUser({});
     window.location.reload();
   };
 
-  // If not logged in, show Login component
-  if (!localStorage.getItem("token") || !user) {
+  // Still verifying token (e.g. after login or page load with token) — show loading to avoid login flash
+  const hasToken = localStorage.getItem("token");
+  if (authChecking && hasToken) {
     return (
       <div className="container">
         <h1>☁️ Cloud Log Monitoring Dashboard</h1>
-        <Login onLogin={() => {
-          // after login, re-check user and refresh UI
-          setUser({}); // temporary optimistic
-          window.location.reload();
-        }} />
+        <div className="auth-card auth-loading">
+          <p className="auth-loading-text">Signing you in…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not logged in, show Sign up (default) or Login
+  if (!hasToken || !user) {
+    return (
+      <div className="container">
+        <h1>☁️ Cloud Log Monitoring Dashboard</h1>
+        {authView === "signup" ? (
+          <SignUp
+            onSignUp={handleLoginSuccess}
+            onShowLogin={() => setAuthView("login")}
+          />
+        ) : (
+          <Login
+            onLogin={handleLoginSuccess}
+            onShowSignUp={() => setAuthView("signup")}
+          />
+        )}
         <p style={{ marginTop: 12, color: "#666" }}>
           You can still view logs without login if your backend allows it.
         </p>

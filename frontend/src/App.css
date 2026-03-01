@@ -188,6 +188,147 @@ h1 {
   cursor: pointer;
 }
 
+.btn-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: inherit;
+}
+
+.btn-link:hover {
+  color: #1d4ed8;
+}
+
+/* Auth cards (Sign up / Login) */
+.auth-card {
+  max-width: 420px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(30, 41, 59, 0.08);
+  padding: 32px;
+  border: 1px solid #e2e8f0;
+}
+
+.auth-card-header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.auth-card-title {
+  margin: 0 0 8px 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.auth-card-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.auth-form-section {
+  margin-bottom: 20px;
+}
+
+.auth-form-section:last-of-type {
+  margin-bottom: 24px;
+}
+
+.auth-section-label {
+  margin: 0 0 12px 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.auth-field {
+  margin-bottom: 14px;
+}
+
+.auth-field:last-child {
+  margin-bottom: 0;
+}
+
+.auth-field label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.auth-field input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  box-sizing: border-box;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.auth-field input::placeholder {
+  color: #94a3b8;
+}
+
+.auth-field input:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: #fff;
+}
+
+.auth-form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.auth-form-actions .btn-primary {
+  padding: 10px 20px;
+  font-size: 0.95rem;
+}
+
+.auth-card-footer {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.signup-card .auth-card-footer {
+  margin-top: 20px;
+  padding-top: 16px;
+}
+
+.auth-loading {
+  text-align: center;
+  padding: 48px 32px;
+}
+
+.auth-loading-text {
+  margin: 0;
+  font-size: 1rem;
+  color: #64748b;
+}
+
 /* Table tweaks */
 .log-table table {
   width: 100%;
