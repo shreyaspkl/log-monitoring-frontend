@@ -13,8 +13,8 @@ export default function Login({ onLogin, onShowSignUp }) {
       setLoading(true);
       const res = await login({ username, password });
       // expecting { token: "..." } from backend
-      if (res?.data?.token) {
-        localStorage.setItem("token", res.data.token);
+      if (res?.data?.jwt) {
+        localStorage.setItem("token", res.data.jwt);
         onLogin && onLogin(res.data);
       } else {
         alert("Login succeeded but no token found in response.");

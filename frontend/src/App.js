@@ -41,7 +41,8 @@ export default function App() {
       }
       try {
         const res = await me();
-        setUser(res.data || { name: res.data });
+        // Backend /api/auth/me returns { id, username, email, createdAt, roles }
+        setUser(res.data && typeof res.data === "object" ? res.data : { username: res.data });
       } catch (err) {
         console.warn("Not authenticated or token invalid");
         localStorage.removeItem("token");
@@ -182,9 +183,7 @@ export default function App() {
             onShowSignUp={() => setAuthView("signup")}
           />
         )}
-        <p style={{ marginTop: 12, color: "#666" }}>
-          You can still view logs without login if your backend allows it.
-        </p>
+
       </div>
     );
   }
