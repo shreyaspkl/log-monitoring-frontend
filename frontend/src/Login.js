@@ -13,8 +13,8 @@ export default function Login({ onLogin, onShowSignUp }) {
       setLoading(true);
       const res = await login({ username, password });
       // expecting { token: "..." } from backend
-      if (res?.data?.token) {
-        localStorage.setItem("token", res.data.token);
+      if (res?.data?.jwt) {
+        localStorage.setItem("token", res.data.jwt);
         onLogin && onLogin(res.data);
       } else {
         alert("Login succeeded but no token found in response.");
@@ -81,12 +81,35 @@ export default function Login({ onLogin, onShowSignUp }) {
         </div>
       </form>
 
-      <div className="auth-card-footer">
-        Don&apos;t have an account?{" "}
-        <button type="button" className="btn-link" onClick={onShowSignUp}>
-          Create account
-        </button>
+      {/* Divider */}
+      <div style={{ margin: "16px 0", textAlign: "center", fontSize: 12, color: "#94a3b8" }}>
+        <span style={{ padding: "0 8px" }}>OR</span>
       </div>
+
+      {/* Google OAuth2 login */}
+      <button
+        type="button"
+        className="btn-secondary"
+        style={{ width: "100%" }}
+        onClick={() => {
+          const serverRoot =
+            process.env.REACT_APP_SERVER_URL || "http://localhost:8080";
+
+          window.location.href = `${serverRoot}/oauth2/authorization/google`;
+        }}
+      >
+        Continue with Google
+      </button>
+
+<div className="auth-card-footer">
+  Don&apos;t have an account?{" "}
+  <button type="button" className="btn-link" onClick={onShowSignUp}>
+    Create account
+  </button>
+  <div style={{ marginTop: 8, fontSize: 13, color: "#64748b" }}>
+    Or continue with Google—if your email isn’t registered, we&apos;ll create your account automatically.
+  </div>
+</div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 // src/api.js
 import axios from "axios";
 
-const BASE = process.env.REACT_APP_API_URL || "https://logs-monitoring.onrender.com/api";
+const BASE = process.env.REACT_APP_API_URL || "http://localhost:8080/api";
 
 export const API = axios.create({
   baseURL: BASE,

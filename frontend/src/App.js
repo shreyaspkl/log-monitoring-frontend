@@ -33,6 +33,15 @@ export default function App() {
   const [authChecking, setAuthChecking] = useState(true); // true until we've finished verifying token (avoids login flash)
 
   useEffect(() => {
+    // 1) Handle OAuth2 callback (?token=...)
+    const params = new URLSearchParams(window.location.search);
+    const tokenFromUrl = params.get("jwt");
+    if (tokenFromUrl) {
+      localStorage.setItem("token", tokenFromUrl);
+      // Clean URL so refresh doesn't keep token in the bar
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     const verify = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -41,7 +50,8 @@ export default function App() {
       }
       try {
         const res = await me();
-        setUser(res.data || { name: res.data });
+        // Backend /api/auth/me returns { id, username, email, createdAt, roles }
+        setUser(res.data && typeof res.data === "object" ? res.data : { username: res.data });
       } catch (err) {
         console.warn("Not authenticated or token invalid");
         localStorage.removeItem("token");
@@ -182,9 +192,7 @@ export default function App() {
             onShowSignUp={() => setAuthView("signup")}
           />
         )}
-        <p style={{ marginTop: 12, color: "#666" }}>
-          You can still view logs without login if your backend allows it.
-        </p>
+
       </div>
     );
   }
