@@ -101,12 +101,15 @@ export default function Login({ onLogin, onShowSignUp }) {
         Continue with Google
       </button>
 
-      <div className="auth-card-footer">
-        Don&apos;t have an account?{" "}
-        <button type="button" className="btn-link" onClick={onShowSignUp}>
-          Create account
-        </button>
-      </div>
+<div className="auth-card-footer">
+  Don&apos;t have an account?{" "}
+  <button type="button" className="btn-link" onClick={onShowSignUp}>
+    Create account
+  </button>
+  <div style={{ marginTop: 8, fontSize: 13, color: "#64748b" }}>
+    Or continue with Google—if your email isn’t registered, we&apos;ll create your account automatically.
+  </div>
+</div>
     </div>
   );
 }
