@@ -81,6 +81,26 @@ export default function Login({ onLogin, onShowSignUp }) {
         </div>
       </form>
 
+      {/* Divider */}
+      <div style={{ margin: "16px 0", textAlign: "center", fontSize: 12, color: "#94a3b8" }}>
+        <span style={{ padding: "0 8px" }}>OR</span>
+      </div>
+
+      {/* Google OAuth2 login */}
+      <button
+        type="button"
+        className="btn-secondary"
+        style={{ width: "100%" }}
+        onClick={() => {
+          const serverRoot =
+            process.env.REACT_APP_SERVER_URL || "http://localhost:8080";
+
+          window.location.href = `${serverRoot}/oauth2/authorization/google`;
+        }}
+      >
+        Continue with Google
+      </button>
+
       <div className="auth-card-footer">
         Don&apos;t have an account?{" "}
         <button type="button" className="btn-link" onClick={onShowSignUp}>

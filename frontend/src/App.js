@@ -33,6 +33,15 @@ export default function App() {
   const [authChecking, setAuthChecking] = useState(true); // true until we've finished verifying token (avoids login flash)
 
   useEffect(() => {
+    // 1) Handle OAuth2 callback (?token=...)
+    const params = new URLSearchParams(window.location.search);
+    const tokenFromUrl = params.get("jwt");
+    if (tokenFromUrl) {
+      localStorage.setItem("token", tokenFromUrl);
+      // Clean URL so refresh doesn't keep token in the bar
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     const verify = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
