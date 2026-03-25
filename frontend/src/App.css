@@ -87,7 +87,8 @@ h1 {
 }
 
 .log-row:hover {
-  background: #f5f7fa;
+  background: #f1f5f9;
+  transition: 0.2s;
 }
 
 .arrow {
@@ -363,3 +364,80 @@ h1 {
 .error { color: #dc2626; font-weight: 600; }
 .warn { color: #d97706; font-weight: 600; }
 .info { color: #16a34a; font-weight: 600; }
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-badge {
+  background: #eef2ff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge.error {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.badge.warn {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.badge.info {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.log-row:hover {
+  background: #f1f5f9;
+  transform: scale(1.002);
+  transition: 0.2s;
+}
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #64748b;
+}
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.admin-table th {
+  background: #f1f5f9;
+  padding: 8px;
+  text-align: left;
+}
+
+.admin-table td {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}

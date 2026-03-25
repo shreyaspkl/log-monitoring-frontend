@@ -213,7 +213,26 @@ export default function App() {
   if (authChecking && hasToken) {
     return (
       <div className="container">
-        <h1>☁️ Cloud Log Monitoring Dashboard</h1>
+<div className="header">
+  <div>
+    <h1 className="title">☁️ Cloud Log Monitoring</h1>
+    <p className="subtitle">Real-time logs & access control</p>
+  </div>
+
+  <div className="header-actions">
+    <span className="user-badge">
+      👤 {user?.name || user?.username || "You"}
+    </span>
+
+    <button className="btn-secondary" onClick={() => setShowAdminPanel((s) => !s)}>
+      {showAdminPanel ? "Hide Admin" : "Admin Panel"}
+    </button>
+
+    <button className="btn-secondary" onClick={handleLogout}>
+      Logout
+    </button>
+  </div>
+</div>
         <div className="auth-card auth-loading">
           <p className="auth-loading-text">Signing you in…</p>
         </div>
@@ -250,8 +269,7 @@ export default function App() {
       </div>
 
       <section className="filters card">
-        <h3>🔎 Filters</h3>
-
+<h3 className="section-title">Filters</h3>
         <div className="filter-row">
           <label>
             Project *
@@ -365,9 +383,13 @@ export default function App() {
               </tr>
             </thead>
             <tbody>
-              {(!logs || logs.length === 0) && (
-                <tr><td colSpan="9">No logs found for selected scope.</td></tr>
-              )}
+                {(!logs || logs.length === 0) && (
+                  <tr>
+                    <td colSpan="9">
+                      <div className="empty-state">📭 No logs found</div>
+                    </td>
+                  </tr>
+                )}
 
               {logs.map((log) => (
                 <React.Fragment key={log.id}>
@@ -379,8 +401,10 @@ export default function App() {
                     <td>{log.appName}</td>
                     <td>{log.microservice}</td>
                     <td>{log.sourceApp}</td>
-                    <td className={log.level === "ERROR" ? "error" : log.level === "WARN" ? "warn" : "info"}>
-                      {log.level}
+                    <td>
+                      <span className={`badge ${log.level.toLowerCase()}`}>
+                        {log.level}
+                      </span>
                     </td>
                     <td>{new Date(log.timestamp).toLocaleString()}</td>
                   </tr>

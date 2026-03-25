@@ -138,17 +138,30 @@ export default function AccessAdminPanel({ projects = [], onUnauthorized }) {
 
       <div style={{ marginTop: 14 }}>
         <strong>Current Bindings</strong>
-        <ul>
-          {bindings.length === 0 ? (
-            <li>No bindings</li>
-          ) : (
-            bindings.map((b, idx) => (
-              <li key={idx}>
-                {b.username} - {b.projectKey} - {b.environment} - {b.role}
-              </li>
-            ))
-          )}
-        </ul>
+{bindings.length === 0 ? (
+  <p>No bindings</p>
+) : (
+  <table className="admin-table">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Project</th>
+        <th>Env</th>
+        <th>Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      {bindings.map((b, idx) => (
+        <tr key={idx}>
+          <td>{b.username}</td>
+          <td>{b.projectKey}</td>
+          <td>{b.environment}</td>
+          <td>{b.role}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+)}
       </div>
     </section>
   );
