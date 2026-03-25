@@ -18,8 +18,9 @@ export default function SignUp({ onSignUp, onShowLogin }) {
     try {
       setLoading(true);
       const res = await register({ username, email, password });
-      if (res?.data?.jwt) {
-        localStorage.setItem("token", res.data.jwt);
+        const authToken = res?.data?.jwt || res?.data?.token;
+        if (authToken) {
+            localStorage.setItem("token", authToken);
         onSignUp && onSignUp(res.data);
       } else {
         alert("Account created. Please sign in.");

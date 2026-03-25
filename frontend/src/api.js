@@ -17,14 +17,14 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// response interceptor: handle 401 globally (optional)
+// response interceptor
 API.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err?.response?.status === 401) {
-      // token expired or unauthorized: remove token and reload / redirect to login
+    const status = err?.response?.status;
+    if (status === 401) {
+      // clear invalid token, but do NOT reload (prevents reload loops)
       localStorage.removeItem("token");
-      window.location.reload();
     }
     return Promise.reject(err);
   }
@@ -35,6 +35,9 @@ export const getLogs = (params) => API.get("/logs", { params });
 export const addLog = (data) => API.post("/logs", data);
 export const getCountByLevel = () => API.get("/logs/countByLevel");
 export const getDistinctValues = () => API.get("/logs/distinctValues");
+export const getProjects = () => API.get("/projects");
+export const getProjectsByAccess = (requiredRole) =>
+  API.get("/projects", { params: { requiredRole } });
 
 // ========== Auth API ==========
 export const login = (credentials) => API.post("/auth/login", credentials);
@@ -45,5 +48,10 @@ export const logout = () => {
   return Promise.resolve();
 };
 
-// default export
+// ========== Access Admin API ==========
+export const assignAccess = (payload) => API.post("/access/assign", payload);
+export const revokeAccess = (payload) => API.delete("/access/revoke", { data: payload });
+export const listAccess = (projectId, environment) =>
+  API.get("/access/list", { params: { projectId, environment } });
+
 export default API;
