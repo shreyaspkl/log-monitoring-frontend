@@ -38,6 +38,8 @@ export const getDistinctValues = () => API.get("/logs/distinctValues");
 export const getProjects = () => API.get("/projects");
 export const getProjectsByAccess = (requiredRole) =>
   API.get("/projects", { params: { requiredRole } });
+export const getRequestableProjects = () => API.get("/projects/requestable");
+export const getProjectScopes = () => API.get("/projects/scopes");
 
 // ========== Auth API ==========
 export const login = (credentials) => API.post("/auth/login", credentials);
@@ -53,5 +55,14 @@ export const assignAccess = (payload) => API.post("/access/assign", payload);
 export const revokeAccess = (payload) => API.delete("/access/revoke", { data: payload });
 export const listAccess = (projectId, environment) =>
   API.get("/access/list", { params: { projectId, environment } });
+
+// ========== Access Requests API ==========
+export const createAccessRequest = (payload) => API.post("/access-requests", payload);
+export const getMyAccessRequests = () => API.get("/access-requests/mine");
+export const getPendingAccessRequests = () => API.get("/access-requests/pending");
+export const approveAccessRequest = (requestId, payload) =>
+  API.post(`/access-requests/${requestId}/approve`, payload || {});
+export const rejectAccessRequest = (requestId, payload) =>
+  API.post(`/access-requests/${requestId}/reject`, payload || {});
 
 export default API;

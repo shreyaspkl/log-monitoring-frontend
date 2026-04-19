@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { getLogs, getDistinctValues, getProjectsByAccess, me } from "./api";
+import React, { useEffect, useMemo, useState } from "react";
+import { getDistinctValues, getLogs, getProjectScopes, getProjectsByAccess, getRequestableProjects, me } from "./api";
 import "./App.css";
 import Login from "./Login";
 import SignUp from "./Signup";
 import AccessAdminPanel from "./AccessAdminPanel";
+import AccessRequestPanel from "./AccessRequestPanel";
 
 export default function App() {
   const [logs, setLogs] = useState([]);
@@ -23,6 +24,8 @@ export default function App() {
   const [options, setOptions] = useState({
     projects: [],       // log filter projects: min VIEWER
     adminProjects: [],  // admin panel projects: min ADMIN
+    requestProjects: [],
+    projectScopes: [],
     environments: [],   // ["DEV",...]
     apps: [],
     microservices: [],
@@ -84,19 +87,36 @@ export default function App() {
   const fetchOptions = async () => {
     try {
       setLoadingOptions(true);
-      const [viewerProjectsRes, adminProjectsRes, distinctRes] = await Promise.all([
-        getProjectsByAccess("VIEWER"),
+      const [projectScopesRes, adminProjectsRes, distinctRes, requestProjectsRes] = await Promise.allSettled([
+        getProjectScopes(),
         getProjectsByAccess("ADMIN"),
         getDistinctValues(),
+        getRequestableProjects(),
       ]);
-      const d = distinctRes.data || {};
-      const viewerProjects = normalizeProjects(viewerProjectsRes.data);
-      const adminProjects = normalizeProjects(adminProjectsRes.data);
+      const d = distinctRes.status === "fulfilled" ? distinctRes.value.data || {} : {};
+      const projectScopes =
+        projectScopesRes.status === "fulfilled" && Array.isArray(projectScopesRes.value.data)
+          ? projectScopesRes.value.data
+          : [];
+      const viewerProjects = normalizeProjects(projectScopes);
+      const adminProjects =
+        adminProjectsRes.status === "fulfilled" ? normalizeProjects(adminProjectsRes.value.data) : [];
+      const requestProjects =
+        requestProjectsRes.status === "fulfilled"
+          ? normalizeProjects(requestProjectsRes.value.data)
+          : viewerProjects;
+      const accessibleEnvironments = [...new Set(
+        projectScopes.flatMap((scope) => Array.isArray(scope.environments) ? scope.environments : [])
+      )];
 
       setOptions({
         projects: viewerProjects,
         adminProjects,
-        environments: Array.isArray(d.environments) ? d.environments : [],
+        requestProjects,
+        projectScopes,
+        environments: accessibleEnvironments.length
+          ? accessibleEnvironments
+          : Array.isArray(d.environments) ? d.environments : [],
         apps: Array.isArray(d.apps) ? d.apps : [],
         microservices: Array.isArray(d.microservices) ? d.microservices : [],
         levels: Array.isArray(d.levels) ? d.levels : [],
@@ -194,9 +214,34 @@ export default function App() {
       filters.projectId &&
       !options.projects.some((p) => String(p.id) === String(filters.projectId))
     ) {
-      setFilters((prev) => ({ ...prev, projectId: "" }));
+      setFilters((prev) => ({ ...prev, projectId: "", environment: "" }));
     }
   }, [options.projects, filters.projectId]);
+
+  const selectedProjectScope = useMemo(
+    () => options.projectScopes.find((scope) => String(scope.id) === String(filters.projectId)),
+    [filters.projectId, options.projectScopes]
+  );
+  const availableEnvironments = useMemo(
+    () => (
+      selectedProjectScope?.environments?.length
+        ? selectedProjectScope.environments
+        : options.environments.length
+          ? options.environments
+          : ["DEV", "QA", "UAT", "PROD"]
+    ),
+    [options.environments, selectedProjectScope]
+  );
+
+  useEffect(() => {
+    if (
+      filters.environment &&
+      filters.projectId &&
+      !availableEnvironments.includes(filters.environment)
+    ) {
+      setFilters((prev) => ({ ...prev, environment: "" }));
+    }
+  }, [availableEnvironments, filters.environment, filters.projectId]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -297,7 +342,7 @@ export default function App() {
               disabled={loadingOptions}
             >
               <option value="">Select</option>
-              {(options.environments.length ? options.environments : ["DEV", "QA", "UAT", "PROD"]).map((e) => (
+              {availableEnvironments.map((e) => (
                 <option key={e} value={e}>{e}</option>
               ))}
             </select>
@@ -355,6 +400,8 @@ export default function App() {
           }}
         />
       )}
+
+      <AccessRequestPanel user={user} projects={options.requestProjects} />
 
       <section className="log-table card">
         <h3>📜 Logs</h3>

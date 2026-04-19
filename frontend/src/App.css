@@ -441,3 +441,59 @@ h1 {
   padding: 8px;
   border-bottom: 1px solid #eee;
 }
+.request-card {
+  margin-bottom: 20px;
+}
+
+.section-copy {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.request-reason {
+  min-width: 320px;
+  flex: 1;
+}
+
+.request-reason textarea,
+.filter-row input[type="text"]:disabled,
+.filter-row input[type="text"],
+.filter-row textarea {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #e4e7ee;
+  background: #fbfdff;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.request-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-pill.pending {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-pill.approved {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-pill.rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}

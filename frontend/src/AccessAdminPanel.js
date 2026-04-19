@@ -1,6 +1,13 @@
 // src/AccessAdminPanel.js
 import React, { useState } from "react";
-import { assignAccess, revokeAccess, listAccess } from "./api";
+import {
+  approveAccessRequest,
+  assignAccess,
+  getPendingAccessRequests,
+  listAccess,
+  rejectAccessRequest,
+  revokeAccess,
+} from "./api";
 
 export default function AccessAdminPanel({ projects = [], onUnauthorized }) {
   const [username, setUsername] = useState("");
@@ -9,6 +16,38 @@ export default function AccessAdminPanel({ projects = [], onUnauthorized }) {
   const [roleName, setRoleName] = useState("VIEWER");
   const [bindings, setBindings] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [requests, setRequests] = useState([]);
+  const [requestError, setRequestError] = useState("");
+
+  const loadPendingRequests = async () => {
+    try {
+      const res = await getPendingAccessRequests();
+      setRequests(Array.isArray(res?.data) ? res.data : []);
+      setRequestError("");
+    } catch (err) {
+      handleErr(err);
+      setRequests([]);
+      setRequestError(
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        "Unable to load pending access requests."
+      );
+    }
+  };
+
+  React.useEffect(() => {
+    const loadOnMount = async () => {
+      try {
+        const res = await getPendingAccessRequests();
+        setRequests(Array.isArray(res?.data) ? res.data : []);
+      } catch (err) {
+        handleErr(err);
+        setRequests([]);
+      }
+    };
+
+    loadOnMount();
+  }, []);
 
   const handleErr = (err) => {
     if (err?.response?.status === 403) {
@@ -81,6 +120,39 @@ export default function AccessAdminPanel({ projects = [], onUnauthorized }) {
       setLoading(false);
     }
   };
+
+  const reviewRequest = async (request, decision) => {
+    try {
+      setLoading(true);
+      if (decision === "APPROVED") {
+        await approveAccessRequest(request.id, {
+          decisionNote: "Approved and access assigned.",
+        });
+      } else {
+        await rejectAccessRequest(request.id, {
+          decisionNote: "Rejected by project admin.",
+        });
+      }
+
+      await loadPendingRequests();
+
+      if (
+        decision === "APPROVED" &&
+        String(projectId) === String(request.projectId) &&
+        environment === request.environment
+      ) {
+        await refreshList();
+      }
+
+      alert(decision === "APPROVED" ? "Request approved and access assigned." : "Request rejected.");
+    } catch (err) {
+      handleErr(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const manageableRequests = requests.filter((request) => request.status === "PENDING");
 
   return (
     <section className="card" style={{ marginTop: 20 }}>
@@ -162,6 +234,61 @@ export default function AccessAdminPanel({ projects = [], onUnauthorized }) {
     </tbody>
   </table>
 )}
+      </div>
+
+      <div style={{ marginTop: 20 }}>
+        <strong>Pending Access Requests</strong>
+        {requestError && <p style={{ color: "#dc2626" }}>{requestError}</p>}
+        <div style={{ marginTop: 8, marginBottom: 8 }}>
+          <button className="btn-secondary" onClick={loadPendingRequests} disabled={loading}>
+            Refresh Requests
+          </button>
+        </div>
+        {manageableRequests.length === 0 ? (
+          <p>No pending requests for your admin projects.</p>
+        ) : (
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Project</th>
+                <th>Env</th>
+                <th>Role</th>
+                <th>Reason</th>
+                <th>Requested</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {manageableRequests.map((request) => (
+                <tr key={request.id}>
+                  <td>{request.requesterUsername || request.requesterEmail || "Unknown user"}</td>
+                  <td>{request.projectKey}</td>
+                  <td>{request.environment}</td>
+                  <td>{request.roleName}</td>
+                  <td>{request.reason || "-"}</td>
+                  <td>{new Date(request.createdAt).toLocaleString()}</td>
+                  <td className="request-actions">
+                    <button
+                      className="btn-primary"
+                      onClick={() => reviewRequest(request, "APPROVED")}
+                      disabled={loading}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => reviewRequest(request, "REJECTED")}
+                      disabled={loading}
+                    >
+                      Reject
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </section>
   );
